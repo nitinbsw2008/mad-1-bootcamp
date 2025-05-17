@@ -1,17 +1,11 @@
-from flask import Flask,render_template
+from flask import Flask
 import os
 
-app =Flask(_name_)
+app = Flask(__name__)
 
-@app.route("/", methods=["GET"])
-def login():
-    return render_template(("login.html"))
+@app.route("/", methods=["GET"]) # NOTE: / =  http://192.168.1.42:5000
+def home():
+    return "Hello, World!"
 
-@app.route("/user_signup", methods=["GET"])
-def signup():
-    return render_template("signup.html")
-
-if __name__ == "__main__"
-    app.debug = True
+if __name__ == "__main__":
     app.run(host="0.0.0.0")
-    
