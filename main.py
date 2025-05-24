@@ -17,8 +17,19 @@ def login():
     if request.method == "POST":
         user_email = request.form['email']
         user_password = request.form['password']
-        user = users.query.filter_by(email=user_email, password=user_password).first()
-        return render_template("home.html", username=user.name)
+        user = users.query.filter_by(email=user_email).first()
+
+        if user is None:
+            return 'User not found'
+        else:
+            if user.password != user_password:
+                return 'Incorrect password'
+            else:
+                unique_locations = resturant_data.query.with_entities(resturant_data.location).distinct().all()
+                locations = [loc[0] for loc in unique_locations]
+                print(locations)
+                return render_template("home.html", username=user.name, location_data=locations)
+            
     return render_template("login.html")
 
 @app.route("/user_signup", methods=["GET", "POST"])
@@ -29,13 +40,33 @@ def signup():
         user_password = request.form['password']
         user_type = request.form['user_type']
 
-        new_user = users(name=user_name, email=user_email, password=user_password, user_type=user_type)
-        db.session.add(new_user)
-        db.session.commit()
+        if users.query.filter_by(email=user_email).first():
+            return 'Email already exists'
+        else:
+            if user_type not in ['admin', 'customer', 'resturant']:
+                return 'Invalid user type'
+            else:
+                new_user = users(name=user_name, email=user_email, password=user_password, user_type=user_type)
+                db.session.add(new_user)
+                db.session.commit()
 
         return redirect(url_for("login"))
     return render_template("signup.html")
 
+@app.route("/search_results", methods=["GET", "POST"])
+def search_result_page():
+    if request.method == "POST":
+        if  request.form['form_type'] == "name":
+            resturant_name = request.form['resturant_name']
+            search_result = resturant_data.query.filter_by(name=resturant_name).first()
+            return render_template("searchResult.html" )
+        
+        elif request.form['form_type'] == "location":
+            resturant_location = request.form['resturant_location']
+            search_result = resturant_data.query.filter_by(location=resturant_location).all()
+            return render_template("searchResult.html", search_result=search_result)
+       
+    
 if __name__ == "__main__":
     db.create_all()
     app.debug = True
